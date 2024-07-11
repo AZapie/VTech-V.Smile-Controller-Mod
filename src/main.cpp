@@ -12,7 +12,23 @@ int yTwoPin = 33;
 int xOnePin = 25;
 int xTwoPin = 26;
 
-BleKeyboard bleKeyboard("VSmile Modded Controller", "Zapien Industries");
+/*
+yOne = w
+yTwo = s
+xOne = d
+xTwo = a
+*/
+int yOne;
+int yTwo;
+int xOne;
+int xTwo;
+
+bool wPress = false; 
+bool sPress = false;
+bool dPress = false;
+bool aPress = false;
+
+BleKeyboard bleKeyboard("V.Smile Controller", "Zapien Industries");
 
 void setup() {
   Serial.begin(115200);
@@ -26,6 +42,11 @@ void setup() {
   pinMode(xOnePin, INPUT);
   pinMode(xTwoPin, INPUT);
 
+  yOne = analogRead(yOnePin);
+  yTwo = analogRead(yTwoPin);
+  xOne = analogRead(xOnePin);
+  xTwo = analogRead(xTwoPin);
+
   Serial.println("Starting BLE work!");
   bleKeyboard.begin();
 }
@@ -37,10 +58,10 @@ void loop() {
   int greenVal = analogRead(greenButton);
   int orangeVal = analogRead(orangeButton);
 
-  int yOne = analogRead(yOnePin);
-  int yTwo = analogRead(yTwoPin);
-  int xOne = analogRead(xOnePin);
-  int xTwo = analogRead(xTwoPin);
+  int curr_yOne = analogRead(yOnePin);
+  int curr_yTwo = analogRead(yTwoPin);
+  int curr_xOne = analogRead(xOnePin);
+  int curr_xTwo = analogRead(xTwoPin);
 
   if(bleKeyboard.isConnected()) {
     // Buttons
@@ -60,25 +81,48 @@ void loop() {
       bleKeyboard.write('o');
     }
 
-    // JoyStick Stuff
-    if (yOne > 4000) {
-      bleKeyboard.write('w');
+    // JoyStick
+    if (yOne && curr_yOne > 4000) {
+        bleKeyboard.press('w');
+        wPress = true;
+    } else {
+      if (wPress) {
+        bleKeyboard.release('w');
+      }
     }
-    if (yTwo > 4000) {
-      bleKeyboard.write('s');
+    if (yTwo && curr_yTwo > 4000) {
+        bleKeyboard.press('s');
+        sPress = true;
+    } else {
+      if (sPress) {
+        bleKeyboard.release('s');
+      }
     }
-    if (xOne > 4000) {
-      bleKeyboard.write('d');
+    if (xOne && curr_xOne > 4000) {
+      if (!dPress) {
+        bleKeyboard.press('d');        
+      }
+      dPress = true;
+    } else {
+      if (dPress) {
+        bleKeyboard.release('d');
+        dPress = false;
+      }
     }
-    if (xTwo > 4000) {
-      bleKeyboard.write('a');
+    if (xTwo && curr_xTwo > 4000) {
+        bleKeyboard.press('a');
+        aPress = true;
+    } else {
+      if (aPress) {
+        bleKeyboard.release('a');
+      }
     }
+
+   yOne = curr_yOne;
+   yTwo = curr_yTwo;
+   xOne = curr_xOne;
+   xTwo = curr_xTwo;
   }
-
-
-
-
-
 // This is just serial monitor code to verify that the microcontroller is properly reading and certain values are being met.
     if (redVal > 4000) {
       Serial.println("Punch");
@@ -108,6 +152,5 @@ void loop() {
     if (xTwo > 4000) {
       Serial.println("x Two");
     }
-
   delay(50);
 }
